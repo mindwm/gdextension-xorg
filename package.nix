@@ -17,8 +17,10 @@ stdenv.mkDerivation {
   name = "godot-extension-x11";
   src = ./.;
 
-  nativeBuildInputs = [ scons ];
-  buildInputs = with pkgs; (with xorg; [
+  nativeBuildInputs = with pkgs; [ scons pkg-config makeWrapper ];
+  buildInputs = with pkgs; [
+    godot-cpp
+  ] ++ (with xorg; [
     libX11
     libXcursor
     libXinerama
@@ -43,10 +45,11 @@ stdenv.mkDerivation {
 
   outputs = [ "out" ];
 
-  configurePhase = ''
-    cp -av ${godot-cpp} ./godot-cpp
-    ls -la
+  preBuild = ''
+    substituteInPlace SConstruct \
+    --replace-fail 'godot-cpp/SConstruct' '${godot-cpp}/SConstruct'
   '';
+
   installPhase = ''
     mkdir -p "$out/bin"
     cp demo/bin/*.so $out/bin/
