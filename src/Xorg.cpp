@@ -346,14 +346,6 @@ void Xorg::watchEvents() {
       case XCB_CONFIGURE_NOTIFY:
         {
         xcb_configure_notify_event_t *configure_event = (xcb_configure_notify_event_t *)event;
-        UtilityFunctions::print(vformat("[eventsWatcher]: configure window event: 0x%08x Rect(%d, %d, %d, %d)",
-              configure_event->window,
-              configure_event->x,
-              configure_event->y,
-              configure_event->width,
-              configure_event->height
-              ));
-
         Ref<XorgWindowInfo> w;
         w = find_window_by_id(configure_event->window);
         if (w == NULL)
