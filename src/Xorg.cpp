@@ -151,7 +151,6 @@ TypedArray<XorgWindowInfo> Xorg::list_windows() {
 
 void Xorg::_notification(int p_what) {
   // Don't run if we're in the editor
-  UtilityFunctions::print(vformat("_notification: %s", p_what));
   if (Engine::get_singleton()->is_editor_hint()) {
     return;
   }
@@ -230,7 +229,6 @@ void Xorg::watchClipboard() {
   xcb_flush(conn);
 
   while ((event = xcb_wait_for_event(conn))) {
-    UtilityFunctions::print(vformat("[clipboardWatcher]: new event: 0x%x", event->response_type & ~0x7f));
     if (clipboardWatcherTerminated)
       break;
 
@@ -302,7 +300,6 @@ void Xorg::watchEvents() {
   ERR_FAIL_COND(xcb_request_check(conn, cookie));
 
   while ((event = xcb_wait_for_event(conn))) {
-    UtilityFunctions::print(vformat("[eventsWatcher]: new event 0x%x", event->response_type & ~0x80));
     if (eventsWatcherTerminated)
       break;
 
@@ -311,8 +308,6 @@ void Xorg::watchEvents() {
         {
         xcb_create_notify_event_t *create_event = (xcb_create_notify_event_t *)event;
         if (create_event->width > 1 || create_event->height > 1) {
-          UtilityFunctions::print(vformat("[eventsWatcher]: new window event: 0x%08x (0x%08x)", create_event->window, create_event->parent));
-          UtilityFunctions::print(vformat("[eventsWatcher]: \tWxH (%dx%d)", create_event->width, create_event->height));
           add_window(create_event->window, create_event->parent);
         }
         else {
@@ -323,17 +318,14 @@ void Xorg::watchEvents() {
       case XCB_DESTROY_NOTIFY:
         {
         xcb_destroy_notify_event_t *destroy_event = (xcb_destroy_notify_event_t *)event;
-        UtilityFunctions::print(vformat("[eventsWatcher]: destroy window event: 0x%08x", destroy_event->window));
         Ref<XorgWindowInfo> w;
         w = find_window_by_id(destroy_event->window);
         if (w != NULL) {
-          UtilityFunctions::print(vformat("[eventsWatcher]: destroy by win_id 0x%x", w->get_win_id()));
           remove_window(w);
         }
         else {
           w = find_window_by_parent_id(destroy_event->window);
           if (w != NULL) {
-            UtilityFunctions::print(vformat("[eventsWatcher]: destroy by parent_id 0x%x", w->get_win_id()));
             remove_window(w);
           }
         }
@@ -342,12 +334,10 @@ void Xorg::watchEvents() {
       case XCB_REPARENT_NOTIFY:
         {
         xcb_reparent_notify_event_t *reparent_event = (xcb_reparent_notify_event_t *)event;
-        UtilityFunctions::print(vformat("[eventsWatcher]: reparent window event: 0x%08x new parent 0x%x", reparent_event->window, reparent_event->parent));
 
         Ref<XorgWindowInfo> w;
         w = find_window_by_id(reparent_event->window);
         if (w != NULL) {
-          UtilityFunctions::print(vformat("[eventsWatcher]: set parent: 0x%08x old 0x%x new 0x%x", w->get_win_id(), w->get_parent_id(), reparent_event->parent));
           w->set_parent_id(reparent_event->parent);
         }
 
@@ -498,10 +488,6 @@ void Xorg::add_window(xcb_window_t win, xcb_window_t parent) {
 
   xw->set_wm_rect(r);
 
-  printf("\t(%x) TransXY: (%d, %d)\n\tGeom (x,y) (w,h) (b): (%d, %d) (%d, %d) (%d)\n",
-  geom->root, trans_coord->dst_x, trans_coord->dst_y,
-  geom->x, geom->y, geom->width, geom->height, geom->border_width);
-
   std::free(geom);
   std::free(trans_coord);
 
@@ -509,7 +495,6 @@ void Xorg::add_window(xcb_window_t win, xcb_window_t parent) {
   Ref<XorgWindowTexture> win_tex;
   win_tex.instantiate();
   window_textures.push_back(win_tex);
-//  UtilityFunctions::print(vformat("[mindwm]: Xorg texRID: %s", win_tex->get_rid()));
   call_deferred("emit_signal", "window_created", xw);
 }
 
